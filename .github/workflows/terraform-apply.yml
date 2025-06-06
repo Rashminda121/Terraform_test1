@@ -1,9 +1,7 @@
 name: Terraform Apply
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   terraform-apply:
@@ -18,6 +16,14 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -no-color \
+          -var="aws_access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" \
+          -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
 
       - name: Terraform Apply
         run: terraform apply -auto-approve \
