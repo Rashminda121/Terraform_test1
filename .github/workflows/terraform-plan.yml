@@ -37,4 +37,8 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           path: tfplan.txt
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Remove tfplan file
+        run: rm tfplan.txt
