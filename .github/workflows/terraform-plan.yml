@@ -33,11 +33,9 @@ jobs:
           terraform plan -no-color \
             -var="aws_access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" \
             -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" > tfplan.txt
-
-          # Save output for use in other steps (multi-line output via GITHUB_ENV)
-          echo "PLAN_OUTPUT<<EOF" >> $GITHUB_ENV
-          cat tfplan.txt >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          # Save plan output to an output variable, escaping newlines
+          plan_output=$(cat tfplan.txt | sed ':a;N;$!ba;s/\n/\\n/g' | sed 's/"/\\"/g')
+          echo "::set-output name=plan-output::$plan_output"
 
       - name: Comment Plan on PR
         uses: peter-evans/create-or-update-comment@v4
@@ -46,16 +44,14 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             ### Terraform Plan Output
-            ```terraform
-            ${{ env.PLAN_OUTPUT }}
+            ```
+            ${{ steps.plan.outputs.plan-output }}
             ```
 
       - name: Send Terraform Plan to Microsoft Teams
-        env:
-          PLAN_OUTPUT: ${{ env.PLAN_OUTPUT }}
         run: |
-          # Escape JSON-sensitive characters
-          ESCAPED_PLAN=$(echo "$PLAN_OUTPUT" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+          raw_output="${{ steps.plan.outputs.plan-output }}"
+          escaped_output=$(echo "$raw_output" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
 
           curl -X POST ${{ secrets.MS_TEAMS_API }} \
             -H "Content-Type: application/json" \
@@ -78,7 +74,7 @@ jobs:
                 },
                 {
                   \"title\": \"Terraform Plan Output\",
-                  \"text\": \"\`\`\`\n${ESCAPED_PLAN}\n\`\`\`\"
+                  \"text\": \"\`\`\`\n${escaped_output}\n\`\`\`\"
                 }
               ],
               \"potentialAction\": [
@@ -92,5 +88,5 @@ jobs:
               ]
             }"
 
-      - name: Cleanup
-        run: rm -f tfplan.txt
+      - name: Remove tfplan file
+        run: rm tfplan.txt
