@@ -50,6 +50,7 @@ jobs:
 
       - name: Send Terraform Plan to Microsoft Teams
         run: |
+          plan_output="${{ steps.plan.outputs.plan-output }}"
           curl -X POST ${{ secrets.MS_TEAMS_API }} \
             -H "Content-Type: application/json" \
             -d "{
@@ -71,7 +72,7 @@ jobs:
                 },
                 {
                   \"title\": \"Terraform Plan Output\",
-                  \"text\": \"\`\`\`\n${{ steps.plan.outputs.plan-output }}\n\`\`\`\"
+                  \"text\": \"\`\`\`\n${plan_output}\n\`\`\`\"
                 }
               ],
               \"potentialAction\": [
