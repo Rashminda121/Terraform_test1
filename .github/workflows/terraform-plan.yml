@@ -50,7 +50,9 @@ jobs:
 
       - name: Send Terraform Plan to Microsoft Teams
         run: |
-          plan_output="${{ steps.plan.outputs.plan-output }}"
+          raw_output="${{ steps.plan.outputs.plan-output }}"
+          escaped_output=$(echo "$raw_output" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+
           curl -X POST ${{ secrets.MS_TEAMS_API }} \
             -H "Content-Type: application/json" \
             -d "{
@@ -72,7 +74,7 @@ jobs:
                 },
                 {
                   \"title\": \"Terraform Plan Output\",
-                  \"text\": \"\`\`\`\n${plan_output}\n\`\`\`\"
+                  \"text\": \"\`\`\`\n${escaped_output}\n\`\`\`\"
                 }
               ],
               \"potentialAction\": [
