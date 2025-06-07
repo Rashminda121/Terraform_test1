@@ -60,7 +60,7 @@ jobs:
               \"@context\": \"https://schema.org/extensions\",
               \"themeColor\": \"00BFFF\",
               \"summary\": \"Terraform Plan Notification\",
-              \"title\": \"Terraform Plan Executed Successfully\",
+              \"title\": \"Terraform Plan Details\",
               \"sections\": [
                 {
                   \"activityTitle\": \"**${{ github.actor }}** created a Pull Request\",
