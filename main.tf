@@ -8,17 +8,15 @@ terraform {
 }
 
 provider "aws" {
-    region = "ap-southeast-1"
-    access_key = "AKIA33N3PSPJ6PRIKHA6"
-    secret_key = "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"
+  region     = var.aws_region
+  access_key = var.aws_access_key
+  secret_key = var.aws_secret_key
 }
 
 resource "tls_private_key" "rsa_4096" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
-
-variable "key_name" {}
 
 resource "aws_key_pair" "key_pair" {
   key_name   = var.key_name
