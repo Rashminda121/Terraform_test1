@@ -64,9 +64,9 @@ jobs:
               \"sections\": [
                 {
                   \"activityTitle\": \"**${{ github.actor }}** created a Pull Request\",
-                  \"activitySubtitle\": \"Date: $(date -u +'%Y-%m-%d %H:%M UTC')\",
+                  \"activitySubtitle\": \"Date: $(date -u -d '+5 hour 30 min' +'%Y-%m-%d %H:%M IST')\",
                   \"facts\": [
-                    { \"name\": \"Branch\", \"value\": \"\`${{ github.head_ref || github.ref_name }}\`\" },
+                    { "name": "Branch", "value": "\${{ github.head_ref || github.ref_name }}" },
                     { \"name\": \"Repository\", \"value\": \"[${{ github.repository }}](https://github.com/${{ github.repository }})\" },
                     { \"name\": \"Pull Request\", \"value\": \"[PR #${{ github.event.pull_request.number }}](https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }})\" }
                   ],
@@ -74,7 +74,7 @@ jobs:
                 },
                 {
                   \"title\": \"Terraform Plan Output\",
-                  \"text\": \"\`\`\`\n${escaped_output}\n\`\`\`\"
+                  \"text\": \"\`\`\`\n${escaped_output}\n\n\n\`\`\`\"
                 }
               ],
               \"potentialAction\": [
