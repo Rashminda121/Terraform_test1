@@ -50,31 +50,40 @@ jobs:
 
       - name: Send Terraform Plan to Microsoft Teams
         run: |
+          # Get raw output from previous step
           raw_output="${{ steps.plan.outputs.plan-output }}"
+          # Escape backslashes and quotes for JSON payload, then convert newlines to \n
           escaped_output=$(echo "$raw_output" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
 
-          curl -X POST ${{ secrets.MS_TEAMS_API }} \
+          # Get current date/time in IST timezone
+          ist_date=$(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M IST')
+
+          # Send the message to MS Teams
+          curl -X POST "${{ secrets.MS_TEAMS_API }}" \
             -H "Content-Type: application/json" \
             -d "{
               \"@type\": \"MessageCard\",
               \"@context\": \"https://schema.org/extensions\",
               \"themeColor\": \"00BFFF\",
               \"summary\": \"Terraform Plan Notification\",
-              \"title\": \"Terraform Plan Executed Successfully\",
+              \"title\": \"Terraform Plan Details\",
               \"sections\": [
                 {
                   \"activityTitle\": \"**${{ github.actor }}** created a Pull Request\",
-                  \"activitySubtitle\": \"Date: $(date -u -d '+5 hour 30 min' +'%Y-%m-%d %H:%M IST')\",
+                  \"activitySubtitle\": \"Date: ${ist_date}\",
                   \"facts\": [
-                    { "name": "Branch", "value": "\${{ github.head_ref || github.ref_name }}" },
-                    { \"name\": \"Repository\", \"value\": \"[${{ github.repository }}](https://github.com/${{ github.repository }})\" },
-                    { \"name\": \"Pull Request\", \"value\": \"[PR #${{ github.event.pull_request.number }}](https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }})\" }
+                    { \"name\": \"Branch\", \"value\": \"${{ github.head_ref || github.ref_name }}\" },
+                    { \"name\": \"Repository\", \"value\": \"${{ github.repository }}\" },
+                    { \"name\": \"Pull Request\", \"value\": \"PR #${{ github.event.pull_request.number }}\" }
                   ],
                   \"markdown\": true
                 },
                 {
                   \"title\": \"Terraform Plan Output\",
                   \"text\": \"\`\`\`\n${escaped_output}\n\n\n\`\`\`\"
+                },
+                {
+                  \"text\": \"\n\n\n\"  # extra spacing before action buttons
                 }
               ],
               \"potentialAction\": [
@@ -82,7 +91,10 @@ jobs:
                   \"@type\": \"OpenUri\",
                   \"name\": \"View Pull Request\",
                   \"targets\": [
-                    { \"os\": \"default\", \"uri\": \"https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}\" }
+                    {
+                      \"os\": \"default\",
+                      \"uri\": \"https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}\"
+                    }
                   ]
                 }
               ]
