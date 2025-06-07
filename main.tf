@@ -32,7 +32,7 @@ resource "aws_instance" "public_instance" {
   ami           = "ami-069cb3204f7a90763"
   instance_type = "t2.micro"
   key_name = aws_key_pair.key_pair.key_name
-  
+
   tags = {
     Name = "public_instance"
   }
