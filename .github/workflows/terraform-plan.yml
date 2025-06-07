@@ -48,5 +48,42 @@ jobs:
             ${{ steps.plan.outputs.plan-output }}
             ```
 
+      - name: Send Terraform Plan to Microsoft Teams
+        run: |
+          curl -X POST ${{ secrets.MS_TEAMS_API }} \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"@type\": \"MessageCard\",
+              \"@context\": \"https://schema.org/extensions\",
+              \"themeColor\": \"00BFFF\",
+              \"summary\": \"Terraform Plan Notification\",
+              \"title\": \"Terraform Plan Executed Successfully\",
+              \"sections\": [
+                {
+                  \"activityTitle\": \"**${{ github.actor }}** created a Pull Request\",
+                  \"activitySubtitle\": \"Date: $(date -u +'%Y-%m-%d %H:%M UTC')\",
+                  \"facts\": [
+                    { \"name\": \"Branch\", \"value\": \"\`${{ github.head_ref || github.ref_name }}\`\" },
+                    { \"name\": \"Repository\", \"value\": \"[${{ github.repository }}](https://github.com/${{ github.repository }})\" },
+                    { \"name\": \"Pull Request\", \"value\": \"[PR #${{ github.event.pull_request.number }}](https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }})\" }
+                  ],
+                  \"markdown\": true
+                },
+                {
+                  \"title\": \"Terraform Plan Output\",
+                  \"text\": \"\`\`\`\n${{ steps.plan.outputs.plan-output }}\n\`\`\`\"
+                }
+              ],
+              \"potentialAction\": [
+                {
+                  \"@type\": \"OpenUri\",
+                  \"name\": \"View Pull Request\",
+                  \"targets\": [
+                    { \"os\": \"default\", \"uri\": \"https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}\" }
+                  ]
+                }
+              ]
+            }"
+
       - name: Remove tfplan file
         run: rm tfplan.txt
